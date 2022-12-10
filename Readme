@@ -8,7 +8,7 @@ aws account:
         Attached directly   s3-full-access-for-mlflow-deploy        Inline policy
         Attached from group AmazonEC2ContainerRegistryFullAccess    AWS managed policy from group Ml_fow_dep
                             AmazonSageMakerFullAccess               AWS managed policy from group Ml_fow_dep
-
+   
 Local machine:
     -Install conda environment and install requirements awscli, mlfow, boto3, scikit-learn
     -run mlflow ui
@@ -38,7 +38,7 @@ python deploy.py:
     region = 'us-east-1'
     from aws collect value:
     aws_id = '741481426945'
-    arn = 'arn:aws:iam::741481426945:role/aws-sagemaker-for-deploy-ml-model'
+    arn = 'arn:aws:iam::741481426945:role/aws-sagemaker-for-deploy-ml-model' # ARN: from role and inline policy
     app_name = 'model-application'
     model_uri = f'mlruns/{experiment_id}/{run_id}/artifacts/random-forest-model'
     tag_id = '1.30.0'
@@ -49,6 +49,7 @@ python deploy.py:
                             mode='create',
                             execution_role_arn=arn,
                             image_url=image_url)
+    # check model in sagemaker- dashboard - inference
     
 python predict.py:
     from aws collect value:
