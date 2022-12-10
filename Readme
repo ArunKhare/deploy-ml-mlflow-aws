@@ -1,0 +1,82 @@
+mlflow-boto3-awscli
+
+aws account:
+    create IAM role:
+        create Users  and ssign/create group:
+            -with  
+                            Policy name                             Policy type     
+        Attached directly   s3-full-access-for-mlflow-deploy        Inline policy
+        Attached from group AmazonEC2ContainerRegistryFullAccess    AWS managed policy from group Ml_fow_dep
+                            AmazonSageMakerFullAccess               AWS managed policy from group Ml_fow_dep
+
+Local machine:
+    -Install conda environment and install requirements awscli, mlfow, boto3, scikit-learn
+    -run mlflow ui
+    from the mlruns model directory
+        - run mlflow SageMaker build-and-push-container
+aws:
+    create role under current user WITH add Inline Policy:
+                    Policy name                             Type                Description
+                    AmazonSageMakerFullAccess	            AWS managed	        Provides full access to Amazon SageMakeR
+
+files:
+train.py:
+    -mlflow.set_experiment('my_classification_model')
+    with mlflow.start_run(run_name='My model experiment') as run:
+        -mlflow.log_param('num_estimators', num_estimators)
+        -rf = RandomForestRegressor(n_estimators=num_estimators)
+        -mlflow.sklearn.log_model(rf, 'random-forest-model')
+        -mlflow.log_metric('mse', mse)
+        -run_id = run.info.run_uuid
+        -experiment_id = run.info.experiment_id
+        -mlflow.end_run()
+        -artifact_uri = mlflow.get_artifact_uri()
+python deploy.py:
+    from mlflow mlruns collected value:
+    experiment_id = '1'
+    run_id = 'e227eda631e0401b8019701fd97f4ec0'
+    region = 'us-east-1'
+    from aws collect value:
+    aws_id = '741481426945'
+    arn = 'arn:aws:iam::741481426945:role/aws-sagemaker-for-deploy-ml-model'
+    app_name = 'model-application'
+    model_uri = f'mlruns/{experiment_id}/{run_id}/artifacts/random-forest-model'
+    tag_id = '1.30.0'
+    image_url = aws_id + '.dkr.ecr.' + region + '.amazonaws.com/mlflow-pyfunc:' + tag_id
+    mlflow.sagemaker.deploy(app_name,
+                            model_uri=model_uri,
+                            region_name=region,
+                            mode='create',
+                            execution_role_arn=arn,
+                            image_url=image_url)
+    
+python predict.py:
+    from aws collect value:
+        global app_name
+        global region
+        app_name = 'model-application'
+        region = 'us-east-1'
+    Check_status(app_name)):
+        sage_client = boto3.client('sagemaker', region_name=region)
+        endpoint_description = sage_client.describe_endpoint(EndpointName=app_name)
+        endpoint_status = endpoint_description['EndpointStatus']
+    query_endpoint(app_name.input_json):
+        client = boto3.session.Session().client('sagemaker-runtime', region)
+        response = client.invoke_endpoint(
+                                        EndpointName = app_name,
+                                        Body = input_json,
+                                        ContentType = 'application/json; format=pandas-split',
+                    )
+        preds = response['Body'].read().decode('ascii')
+        preds = json.loads(preds)
+    query_input = pd.DataFrame(X_train).iloc[[15]].to_json(orient='split')
+    query_endpoint(app_name=app_name, input_json=query_input)
+
+commands:
+    python train.py:
+    mlflow ui:
+    mlflow sagemaker build-and-push-container:
+    aws sts get-caller-identity --query Account --output text:
+    
+    
+

@@ -1,21 +1,20 @@
-import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import datasets
 import json
 import boto3
-
+import pandas as pd
 
 global app_name
 global region
 app_name = 'model-application'
-region = 'us-east-2'
+region = 'us-east-1'
 
 def check_status(app_name):
     sage_client = boto3.client('sagemaker', region_name=region)
     endpoint_description = sage_client.describe_endpoint(EndpointName=app_name)
     endpoint_status = endpoint_description['EndpointStatus']
     return endpoint_status
-
+   
 
 def query_endpoint(app_name, input_json):
     client = boto3.session.Session().client('sagemaker-runtime', region)
